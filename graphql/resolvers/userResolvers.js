@@ -22,16 +22,12 @@ module.exports = {
             
                 // check if the inputs are filled & the passwords match
                 const { valid, errors } = validateRegisterInput(username, email, password, confirmPassword)
-                if (!valid) return new UserInputError('Errors', { errors })
+                if (!valid) throw  new UserInputError('Errors', { errors })
 
                 // check if there isn't duplicate usernames in the app
                 const user = await User.findOne({ username })
                 if (user) {
-                    return new UserInputError('User is taken', { // the throw isn't properly working
-                        errors: {
-                            username: 'This username is taken'
-                        }
-                    })
+                    throw new UserInputError('User is taken', { errors: { username: 'This username is taken' } }) // the throw isn't properly working change it by return
                 }
 
                 // hashed password, save the new user, create a token
@@ -48,29 +44,28 @@ module.exports = {
                     id: res._id,
                     token
                 }
-            } catch(error) {
-
+            } catch(err) {
+                throw new Error(err)
             }
         },
         async login(parent, { username, password }, context, info) {
             try {
-                console.log(username, password)
                 // for input validations (username & password)
                 const { errors, valid } = validateLoginInput(username, password)
-                if (!valid) return new UserInputError('Wrong credentials', { errors })
+                if (!valid) throw new UserInputError('Wrong credentials', { errors })
 
                 // check if the user exists in db
                 const user = await User.findOne({ username })
                 if (!user) {
                     errors.general = 'User not found'
-                    return new UserInputError('User not found', { errors })
+                    throw new UserInputError('User not found', { errors })
                 }
 
                 // check if the passwords match
                 const match = await compare(password, user.password) 
                 if (!match) {
                     errors.general = 'Wrong credentials'
-                    return new UserInputError('Wrong credentials', { errors })
+                    throw new UserInputError('Wrong credentials', { errors })
                 }
 
                 const token = generateToken(user)   
@@ -80,7 +75,7 @@ module.exports = {
                     token
                 }          
             } catch (err) {
-
+                throw new Error(err)
             }
         }
     }

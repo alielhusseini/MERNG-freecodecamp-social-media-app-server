@@ -71,7 +71,8 @@ app.use(cors())
 const port = process.env.PORT || 5000
 const server = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
+    context: ({ req }) => ({ req }) // we're forwarding the req body to the context so that we can access the req (header especially) in the context parameter (this is used instead chaining the middleware to all routes upon requesting them. Now from the mutations we can access the req by context)
 })
 
 mongoose.connect(process.env.CONNECTION_URL, { useNewUrlParser: true })
