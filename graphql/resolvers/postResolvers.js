@@ -40,9 +40,9 @@ module.exports = {
         async deletePost(_, { postId }, context) {
             const user = checkAuth(context)
             try {
-                const post = Post.findById(postId)
+                const post = await Post.findById(postId)
                 if (user.username === post.username) { 
-                    await post.delete()
+                    await post.delete(postId)
                     return 'Post deleted successfully'
                 } else {
                     throw new AuthenticationError('Action not allowed')
