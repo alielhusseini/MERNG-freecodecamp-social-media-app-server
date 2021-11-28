@@ -26,9 +26,26 @@ app.use(cors())
             createdAt: String!
             username: String!
         }
+        type User {
+            id: ID!
+            username: String!
+            email: String!
+            token: String!
+            createdAt: String!
+        }
+        input RegisterInput { # it is givin as an input since it will passed to the resolver 
+            username: String!
+            email: String!
+            password: String!
+            confirmPassword: String!
+        }
         # queries:
         type Query {
             getPosts: [Post] # giving the query a type & resolving it in resolvers
+        }
+        # mutations:
+        type Mutation {
+            register(registerInput: RegisterInput): User! # here we'll create a type input(RegisterInput) for the user's input that will be filled from the frontend and passed as a param in this mutation, the type here is User
         }
     `
     const resolvers = { // ! make it in a seperate folder with index.js
@@ -40,6 +57,12 @@ app.use(cors())
                 } catch(err) {
                     throw new Error({ where: 'index/resolver/getPosts' }, err)
                 }
+            }
+        },
+        Mutation: {
+            async register(parent, args, context, info) {
+                ...
+                return User
             }
         }
     }
