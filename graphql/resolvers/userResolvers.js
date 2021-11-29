@@ -3,7 +3,7 @@ const { hash, genSalt, compare } = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { UserInputError } = require('apollo-server') // for handeling errors
 const { validateRegisterInput, validateLoginInput } = require('../../utils/validators')
- 
+
 function generateToken(user) {
     return jwt.sign({
         id: user.id,
@@ -18,21 +18,19 @@ module.exports = {
     Mutation: {
         async register(parent, args, context, info) { // we could destructure right away in the parameters --> { registerInput: { username, email, password, confirmPassword } }
             try {
-                const { username, email, password, confirmPassword } = args.registerInput 
-            
+                const { username, email, password, confirmPassword } = args.registerInput
+
                 // check if the inputs are filled & the passwords match
                 const { valid, errors } = validateRegisterInput(username, email, password, confirmPassword)
-                if (!valid) throw  new UserInputError('Errors', { errors })
+                if (!valid) throw new UserInputError('Errors', { errors })
 
                 // check if there isn't duplicate usernames in the app
                 const user = await User.findOne({ username })
-                if (user) {
-                    throw new UserInputError('User is taken', { errors: { username: 'This username is taken' } }) // the throw isn't properly working change it by return
-                }
+                if (user) throw new UserInputError('User is taken', { errors: { username: 'This username is taken' } }) // the throw isn't properly working change it by return
 
                 // hashed password, save the new user, create a token
                 const salt = await genSalt(12)
-                const hashedPassword = await hash(password, salt)  // or await hash(password, 12)
+                const hashedPassword = await hash(password, salt) // or await hash(password, 12)
 
                 const newUser = new User({ email, username, password: hashedPassword, createdAt: new Date().toISOString() })
 
@@ -44,7 +42,7 @@ module.exports = {
                     id: res._id,
                     token
                 }
-            } catch(err) {
+            } catch (err) {
                 throw new Error(err)
             }
         },
@@ -62,18 +60,18 @@ module.exports = {
                 }
 
                 // check if the passwords match
-                const match = await compare(password, user.password) 
+                const match = await compare(password, user.password)
                 if (!match) {
                     errors.general = 'Wrong credentials'
                     throw new UserInputError('Wrong credentials', { errors })
                 }
 
-                const token = generateToken(user)   
+                const token = generateToken(user)
                 return {
                     ...user._doc,
                     id: user._id,
                     token
-                }          
+                }
             } catch (err) {
                 throw new Error(err)
             }
